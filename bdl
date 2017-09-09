@@ -1,0 +1,181 @@
+#!/bin/bash
+
+XERR(){ echo "ERROR: $1" 1>&2; exit 1; }
+ERR(){ echo "ERROR: $1" 1>&2; }
+
+[ `/bin/uname -s` == "Linux" ] || XERR "Unsupported platform."
+[ $UID -eq 0 ] && XERR "Root access is not required."
+
+DEPCOUNT=0
+for DEP in /usr/bin/{find,wget,head} /bin/date
+{
+	if ! type -P "$DEP" &> /dev/null
+	then
+		ERR "Dependency '$DEP' not met."
+		let DEPCOUNT++
+	fi
+}
+
+[ $DEPCOUNT -gt 0 ] && exit 1
+
+DL_DIR="./"
+MAIN_DIR="$HOME/.bdl"
+LIST_EDITOR_FILE="$MAIN_DIR/editor.conf"
+BDL_FILE="$MAIN_DIR/bdl_list.txt"
+
+SHUTDOWN="false"
+VERBOSE="false"
+NOTIFY="false"
+DEBUG="false"
+
+/bin/mkdir -p "$MAIN_DIR"
+[ -f "$BDL_FILE" ] || > "$BDL_FILE"
+
+if ! [ -f "$LIST_EDITOR_FILE" ]\
+&& ! [ -w "$LIST_EDITOR_FILE" ]\
+&& ! [ -s "$LIST_EDITOR_FILE" ]
+then
+	XERR "Please choose an editor. See --help for info."
+else
+	LIST_EDITOR=`/usr/bin/head -n 1 "$LIST_EDITOR_FILE"`
+fi
+
+USAGE()
+{
+	/bin/cat <<-EOF
+		            BDL (9th September 2017)
+		            Written by terminalforlife (terminalforlife@yahoo.com)
+		
+		            Easily and quickly download a batch of files using wget.
+		
+		OPTS:       --help|-h|-?            - Displays this help information.
+		            --debug|-d              - Enables the built-in bash debugging.
+		            --tohere=T              - Where T is the location to download.
+		            --editor=E              - Where E is the command for your editor.
+		            --verbose|-v            - Display wget's more verbose output.
+		            --suspend|-s            - Immediately suspend machine when finished.
+		            --shutdown|-S           - Like above, but a shutdown after 1 minute.
+		            --notify|-N             - Use notify-send to inform of bdl completion.
+		                                      Notifies only after all files are finished.
+		            --edit|-e               - Change URL list with an available text editor.
+		            --empty|-C              - Empty the bdl download list entirely.
+		
+		FILE:       All files are found in '\$HOME/.bdl'.
+	EOF
+}
+
+INIT_MAIN()
+{
+	[ "$DEBUG" == "true" ] && set -xue
+
+	case "$VERBOSE"
+	in
+		false)
+			VFLAG="--quiet" ;;
+		true)
+			VFLAG="-v" ;;
+	esac
+
+	echo -e "[ `date +%F\ %X` ] Lines detected in bdl list: $(/usr/bin/wc -l < "$BDL_FILE")\n"
+
+	for LINK in `< "$BDL_FILE"`
+	{
+		/usr/bin/wget --random-wait --continue --tries=1 $VFLAG --max-redirect=1\
+			--show-progress "$LINK" -O "${DL_DIR}/${LINK/*\//}"
+
+		/bin/sync "${DL_DIR}/${LINK/*\//}"
+	}
+
+	if [ "$NOTIFY" == "true" ]
+	then
+		if type -P /usr/bin/notify-send &> /dev/null
+		then
+			/usr/bin/notify-send "Downloading with bdl is completed."
+		else
+			ERR "Unable to find notify-send."
+		fi
+	fi
+
+	[ "$DEBUG" == "true" ] && set +xue
+
+	if [ "$SHUTDOWN" == "true" ]
+	then
+		/sbin/shutdown --no-wall +1
+		/usr/bin/notify-send "System shutdown in one minute." -i warning -u critical
+	elif [ "$SUSPEND" == "true" ]
+	then
+		if type -P systemctl &> /dev/null
+		then
+			/usr/bin/notify-send "System will suspend." -i warning -u critical
+			/bin/systemctl suspend
+		elif type -P /usr/sbin/pm-suspend &> /dev/null
+		then
+			/usr/bin/notify-send "System will suspend." -i warning -u critical
+			/usr/sbin/pm-suspend
+		else
+			XERR "Failed to suspend the machine."
+		fi
+	fi
+}
+
+EDIT()
+{
+	if type -P "${LIST_EDITOR%% *}" &> /dev/null
+	then
+		$LIST_EDITOR "$BDL_FILE" 2> /dev/null
+		exit 0
+	else
+		XERR "Cannot execute the command for the chosen editor."
+	fi
+}
+
+EMPTY()
+{
+	/bin/cp "$BDL_FILE" "${BDL_FILE}.old" &> /dev/null
+	echo "NOTE: File '$BDL_FILE' was backed up." > "$BDL_FILE"
+	echo "      File '$BDL_FILE' now completely empty."
+}
+
+for ARG
+{
+	case ${ARG:-EMPTY}
+	in
+		--help|-h|-\?)
+			USAGE; exit 0 ;;
+		--debug|-d)
+			DEBUG="true" ;;
+		--tohere=*)
+			DL_DIR="${ARG/*=}"
+
+			if ! [ -d "$TOHERE" ]
+			then
+				XERR "Destination directory unavailable."
+			fi ;;
+		--editor=*)
+			echo "${ARG/*=}" > "$LIST_EDITOR_FILE"; exit 0 ;;
+		--edit|-e)
+			EDIT ;;
+		--empty|-E)
+			EMPTY; exit 0 ;;
+		--verbose|-v)
+			VERBOSE="true" ;;
+		--notify|-N)
+			NOTIFY="true" ;;
+		--suspend|-s)
+			SUSPEND="true" ;;
+		--shutdown|-S)
+			SHUTDOWN="true" ;;
+		EMPTY)
+			;;
+		*)
+			XERR "Incorrect argument(s)." ;;
+	esac
+}
+
+case "$SHUTDOWN"
+in
+	false)
+		INIT_MAIN ;;
+	true)
+		INIT_MAIN SHUTDOWN ;;
+esac
