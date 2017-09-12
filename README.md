@@ -9,7 +9,7 @@ One of the things I liked about my old Windows days is how easy I found it to ge
 MORE DETAILS
 ------------
 
-As bdl uses wget, a utility installed on most systems by default, bdl will resume downloading where it left off, should the connection be at any point lost. Here is the *--help|-h|-?* output which might give you some ideas as to what you can do with it:
+As bdl uses *wget* (see *man wget(1)* for more info), a utility installed on most systems by default, bdl will resume downloading where it left off, should the connection be at any point lost. Here is the *--help|-h|-?* output which might give you some ideas as to what you can do with it:
 
                 BDL - Batch Downloader (9th September 2017)
                 Written by terminalforlife (terminalforlife@yahoo.com)
