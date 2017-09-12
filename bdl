@@ -43,7 +43,7 @@ fi
 USAGE()
 {
 	/bin/cat <<-EOF
-		            BDL (9th September 2017)
+		            BDL - Batch Downloader (12th September 2017)
 		            Written by terminalforlife (terminalforlife@yahoo.com)
 		
 		            Easily and quickly download a batch of files using wget.
