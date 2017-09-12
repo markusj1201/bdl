@@ -35,6 +35,12 @@ INSTALLATION
 
 No package manager needed here. Load up a terminal on your Linux (BSD and Mac may also work) system, then run the following commands on the *bdl* file (the program/script) you got from this repository. These commands will change the permissions to the standard expected of executables found in *PATH*. If you're concerned or curious, see *man chmod(1)* and *man chown(1)*.
 
+As a safety measure, please run the first command here BEFORE the others, to ensure that you don't overwrite anything:
+
+    [ -f /usr/bin/bdl ]; echo $?
+    
+If you see a "1" after running that, you can run these:
+
     sudo chown root:root bdl
     sudo chmod 755 bdl
     sudo mv bdl /usr/bin/
