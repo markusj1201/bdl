@@ -1,13 +1,22 @@
 #!/bin/bash
 
+#----------------------------------------------------------------------------------
+# Project Name      - bdl
+# Started On        - Sat 16 Sep 22:34:12 BST 2017
+# Last Change       - Sat 16 Sep 22:37:09 BST 2017
+# Author E-Mail     - terminalforlife@yahoo.com
+# Author GitHub     - https://github.com/terminalforlife
+#----------------------------------------------------------------------------------
+
 XERR(){ echo "ERROR: $1" 1>&2; exit 1; }
 ERR(){ echo "ERROR: $1" 1>&2; }
 
-[ `/bin/uname -s` == "Linux" ] || XERR "Unsupported platform."
-[ $UID -eq 0 ] && XERR "Root access is not required."
-
 DEPCOUNT=0
-for DEP in /usr/bin/{find,wget,head} /bin/date
+for DEP in\
+\
+	/usr/bin/{wc,find,wget,head}\
+	/bin/{cat,sync,mkdir,uname,date}\
+	/sbin/shutdown
 {
 	if ! type -P "$DEP" &> /dev/null
 	then
@@ -17,6 +26,9 @@ for DEP in /usr/bin/{find,wget,head} /bin/date
 }
 
 [ $DEPCOUNT -gt 0 ] && exit 1
+
+[ `/bin/uname -s` == "Linux" ] || XERR "Unsupported platform."
+[ $UID -eq 0 ] && XERR "Root access is not required."
 
 DL_DIR="./"
 MAIN_DIR="$HOME/.bdl"
@@ -43,7 +55,7 @@ fi
 USAGE()
 {
 	/bin/cat <<-EOF
-		            BDL - Batch Downloader (12th September 2017)
+		            BDL - Batch Downloader (16th September 2017)
 		            Written by terminalforlife (terminalforlife@yahoo.com)
 		
 		            Easily and quickly download a batch of files using wget.
@@ -104,7 +116,7 @@ INIT_MAIN()
 		/usr/bin/notify-send "System shutdown in one minute." -i warning -u critical
 	elif [ "$SUSPEND" == "true" ]
 	then
-		if type -P systemctl &> /dev/null
+		if type -P /bin/systemctl &> /dev/null
 		then
 			/usr/bin/notify-send "System will suspend." -i warning -u critical
 			/bin/systemctl suspend

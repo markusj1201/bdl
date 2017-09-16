@@ -4,31 +4,11 @@ Easily and quickly download a batch of files using wget.
 INTRODUCTION
 ------------
 
-One of the things I liked about my old Windows days is how easy I found it to get downloaders. I wanted a similar program in Linux, and I prefer to write my own stuff when I can, so here comes bdl (Batch Downloader). This program will simply download -- with wget -- from links specified in a file you can edit with your chosen editor, such as *vim* or *nano*. It's simple, but useful.
+One of the things I liked about my old Windows days is how easy I found it to get downloaders. I wanted a similar program in Linux, and I prefer to write my own stuff when I can, so here comes bdl (Batch Downloader). This program will simply download -- with wget -- from directory links specified in a file you can edit with your chosen editor, such as *vim* or *nano*. It's simple, but useful.
 
-MORE DETAILS
-------------
+As bdl uses *wget* (see *man wget(1)* for more info), a utility installed on most systems by default, bdl will resume downloading where it left off, should the connection be at any point lost. You'll have the option to suspend or shutdown the machine after downloading is completed, and/or to notify you via notify-send, if installed.
 
-As bdl uses *wget* (see *man wget(1)* for more info), a utility installed on most systems by default, bdl will resume downloading where it left off, should the connection be at any point lost. Here is the *--help|-h|-?* output which might give you some ideas as to what you can do with it:
-
-                BDL - Batch Downloader (9th September 2017)
-                Written by terminalforlife (terminalforlife@yahoo.com)
-    
-                Easily and quickly download a batch of files using wget.
-    
-    OPTS:       --help|-h|-?            - Displays this help information.
-                --debug|-d              - Enables the built-in bash debugging.
-                --tohere=T              - Where T is the location to download.
-                --editor=E              - Where E is the command for your editor.
-                --verbose|-v            - Display wget's more verbose output.
-                --suspend|-s            - Immediately suspend machine when finished.
-                --shutdown|-S           - Like above, but a shutdown after 1 minute.
-                --notify|-N             - Use notify-send to inform of bdl completion.
-                                          Notifies only after all files are finished.
-                --edit|-e               - Change URL list with an available text editor.
-                --empty|-C              - Empty the bdl download list entirely.
-    
-    FILE:       All files are found in '$HOME/.bdl'.
+Editing or emptying the list of downloads is as easy as `bdl --edit` or `bdl --empty`, respectively.
 
 INSTALLATION
 ------------
