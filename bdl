@@ -3,7 +3,7 @@
 #----------------------------------------------------------------------------------
 # Project Name      - bdl
 # Started On        - Sat 16 Sep 22:34:12 BST 2017
-# Started On        - Sat 16 Sep 22:34:12 BST 2017
+# Last Change       - Sun 17 Sep 23:55:15 BST 2017
 # Author E-Mail     - terminalforlife@yahoo.com
 # Author GitHub     - https://github.com/terminalforlife
 #----------------------------------------------------------------------------------
@@ -27,9 +27,6 @@ for DEP in\
 
 [ $DEPCOUNT -gt 0 ] && exit 1
 
-[ `/bin/uname -s` == "Linux" ] || XERR "Unsupported platform."
-[ $UID -eq 0 ] && XERR "Root access is not required."
-
 DL_DIR="./"
 MAIN_DIR="$HOME/.bdl"
 LIST_EDITOR_FILE="$MAIN_DIR/editor.conf"
@@ -43,19 +40,10 @@ DEBUG="false"
 /bin/mkdir -p "$MAIN_DIR"
 [ -f "$BDL_FILE" ] || > "$BDL_FILE"
 
-if ! [ -f "$LIST_EDITOR_FILE" ]\
-&& ! [ -w "$LIST_EDITOR_FILE" ]\
-&& ! [ -s "$LIST_EDITOR_FILE" ]
-then
-	XERR "Please choose an editor. See --help for info."
-else
-	LIST_EDITOR=`/usr/bin/head -n 1 "$LIST_EDITOR_FILE"`
-fi
-
 USAGE()
 {
 	/bin/cat <<-EOF
-		            BDL - Batch Downloader (16th September 2017)
+		            BDL - Batch Downloader (17th September 2017)
 		            Written by terminalforlife (terminalforlife@yahoo.com)
 		
 		            Easily and quickly download a batch of files using wget.
@@ -183,6 +171,18 @@ for ARG
 			XERR "Incorrect argument(s)." ;;
 	esac
 }
+
+[ `/bin/uname -s` == "Linux" ] || XERR "Unsupported platform."
+[ $UID -eq 0 ] && XERR "Root access is not required."
+
+if ! [ -f "$LIST_EDITOR_FILE" ]\
+&& ! [ -w "$LIST_EDITOR_FILE" ]\
+&& ! [ -s "$LIST_EDITOR_FILE" ]
+then
+	XERR "Please choose an editor. See --help for info."
+else
+	LIST_EDITOR=`/usr/bin/head -n 1 "$LIST_EDITOR_FILE"`
+fi
 
 case "$SHUTDOWN"
 in
