@@ -16,7 +16,7 @@ INSTALLATION
 Download and use the `install_bdl` installer by using this terminal command:
 
 ```bash
-wget -cq https://raw.githubusercontent.com/terminalforlife/bdl/master/install_bdl
+wget -q https://raw.githubusercontent.com/terminalforlife/bdl/master/install_bdl
 ```
 
 Now execute the installer with this:
