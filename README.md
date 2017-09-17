@@ -13,18 +13,35 @@ Editing or emptying the list of downloads is as easy as `bdl --edit` or `bdl --e
 INSTALLATION
 ------------
 
-No package manager needed here. Load up a terminal on your Linux (BSD and Mac may also work) system, then run the following commands on the *bdl* file (the program/script) you got from this repository. These commands will change the permissions to the standard expected of executables found in *PATH*. If you're concerned or curious, see *man chmod(1)* and *man chown(1)*.
+Download and use the `install_bdl` installer by using this terminal command:
 
-As a safety measure, please run the first command here BEFORE the others, to ensure that you don't overwrite anything:
+```bash
+wget -cq https://raw.githubusercontent.com/terminalforlife/bdl/master/install_bdl
+```
 
-    [ -f /usr/bin/bdl ]; echo $?
-    
-If you see a "1" after running that, you can run these:
+Now execute the installer with this:
 
-    sudo chown root:root bdl
-    sudo chmod 755 bdl
-    sudo mv bdl /usr/bin/
-    
-You can of course place the executable anywhere you like, but it works best in a standard location within *PATH*. To uninstall bdl, it's even easier:
+```bash
+sudo bash install_bdl
+```
 
-    sudo rm /usr/bin/bdl
+Or if you prefer, make it executable, then more easily run it like so:
+
+```bash
+chmod u+x install_bdl
+./install_bdl
+```
+
+Example installation of bdl:
+
+    ➤  chmod u+x install_bdl
+    ➤  sudo ./install_bdl
+    L096: Checking conflict: /usr/bin/bdl
+    L108: Downloading here: /usr/bin/bdl
+    L112: Correcting attributes: /usr/bin/bdl
+
+Example uninstallation of bdl:
+
+    ➤  sudo ./install_bdl --uninstall
+    L087: Uninstalling program.
+    L118: Sending to trash: /usr/bin/bdl
