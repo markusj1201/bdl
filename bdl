@@ -3,7 +3,7 @@
 #----------------------------------------------------------------------------------
 # Project Name      - bdl
 # Started On        - Sat 16 Sep 22:34:12 BST 2017
-# Last Change       - Tue  3 Oct 13:22:22 BST 2017
+# Last Change       - Tue  3 Oct 23:33:56 BST 2017
 # Author E-Mail     - terminalforlife@yahoo.com
 # Author GitHub     - https://github.com/terminalforlife
 #----------------------------------------------------------------------------------
@@ -18,11 +18,10 @@ for DEP in\
 	/bin/{sync,mkdir,uname,date}\
 	/sbin/shutdown
 {
-	if ! [ -x "$DEP" ]
-	then
+	[ -x "$DEP" ] || {
 		ERR "Dependency '$DEP' not met."
 		let DEPCOUNT++
-	fi
+	}
 }
 
 [ $DEPCOUNT -gt 0 ] && exit 1
@@ -40,10 +39,8 @@ DEBUG="false"
 /bin/mkdir -p "$MAIN_DIR"
 [ -f "$BDL_FILE" ] || > "$BDL_FILE"
 
-USAGE()
-{
-	while read -r
-	do
+USAGE(){
+	while read -r; do
 		echo "$REPLY"
 	done <<-EOF
 		            BDL - Batch Downloader (3rd October 2017)
@@ -67,52 +64,52 @@ USAGE()
 	EOF
 }
 
-INIT_MAIN()
-{
+if ! [ -f "$LIST_EDITOR_FILE" ]\
+&& ! [ -w "$LIST_EDITOR_FILE" ]\
+&& ! [ -s "$LIST_EDITOR_FILE" ]; then
+	XERR "Please choose an editor. See --help for info."
+else
+	LIST_EDITOR=`< "$LIST_EDITOR_FILE"`
+fi
+
+INIT_MAIN(){
 	[ "$DEBUG" == "true" ] && set -xue
 
-	case "$VERBOSE"
-	in
+	case "$VERBOSE" in
 		false)
 			VFLAG="--quiet" ;;
 		true)
 			VFLAG="-v" ;;
 	esac
 
-	echo -e "[ `/bin/date +%F\ %X` ] Lines detected in bdl list: $(/usr/bin/wc -l < "$BDL_FILE")\n"
+	echo -e "[ `/bin/date +%F\ %X` ] Lines detected in bdl"\
+		"list: $(/usr/bin/wc -l < "$BDL_FILE")\n"
 
-	for LINK in `< "$BDL_FILE"`
-	{
+	for LINK in `< "$BDL_FILE"`; {
 		/usr/bin/wget --random-wait --continue --tries=1 $VFLAG --max-redirect=1\
 			--show-progress "$LINK" -O "${DL_DIR}/${LINK/*\//}"
 
 		/bin/sync "${DL_DIR}/${LINK/*\//}"
 	}
 
-	if [ "$NOTIFY" == "true" ]
-	then
-		if type -P /usr/bin/notify-send &> /dev/null
-		then
+	[ "$NOTIFY" == "true" ] && {
+		if type -P /usr/bin/notify-send &> /dev/null; then
 			/usr/bin/notify-send "Downloading with bdl is completed."
 		else
 			ERR "Unable to find notify-send."
 		fi
-	fi
+	}
 
 	[ "$DEBUG" == "true" ] && set +xue
 
-	if [ "$SHUTDOWN" == "true" ]
-	then
+	if [ "$SHUTDOWN" == "true" ]; then
 		/sbin/shutdown --no-wall +1
 		/usr/bin/notify-send "System shutdown in one minute." -i warning -u critical
-	elif [ "$SUSPEND" == "true" ]
-	then
-		if [ -x /bin/systemctl ]
-		then
+	elif [ "$SUSPEND" == "true" ]; then
+		if [ -x /bin/systemctl ]; then
 			/usr/bin/notify-send "System will suspend." -i warning -u critical
 			/bin/systemctl suspend
-		elif [ -x /usr/sbin/pm-suspend ]
-		then
+		elif [ -x /usr/sbin/pm-suspend ]; then
 			/usr/bin/notify-send "System will suspend." -i warning -u critical
 			/usr/sbin/pm-suspend
 		else
@@ -121,28 +118,23 @@ INIT_MAIN()
 	fi
 }
 
-EDIT()
-{
-	if type -P "${LIST_EDITOR%% *}" &> /dev/null
-	then
+EDIT(){
+	if [ -x "$LIST_EDITOR" ]; then
 		$LIST_EDITOR "$BDL_FILE" 2> /dev/null
 		exit 0
 	else
-		XERR "Cannot execute the command for the chosen editor."
+		XERR "Unable to execute: $LIST_EDITOR"
 	fi
 }
 
-EMPTY()
-{
+EMPTY(){
 	/bin/cp "$BDL_FILE" "${BDL_FILE}.old" &> /dev/null
 	echo "NOTE: File '$BDL_FILE' was backed up." > "$BDL_FILE"
 	echo "      File '$BDL_FILE' now completely empty."
 }
 
-for ARG
-{
-	case ${ARG:-EMPTY}
-	in
+for ARG; {
+	case ${ARG:-EMPTY} in
 		--help|-h|-\?)
 			USAGE; exit 0 ;;
 		--debug|-d)
@@ -177,17 +169,7 @@ for ARG
 [ `/bin/uname -s` == "Linux" ] || XERR "Unsupported platform."
 [ $UID -eq 0 ] && XERR "Root access is not required."
 
-if ! [ -f "$LIST_EDITOR_FILE" ]\
-&& ! [ -w "$LIST_EDITOR_FILE" ]\
-&& ! [ -s "$LIST_EDITOR_FILE" ]
-then
-	XERR "Please choose an editor. See --help for info."
-else
-	LIST_EDITOR=`/usr/bin/head -n 1 "$LIST_EDITOR_FILE"`
-fi
-
-case "$SHUTDOWN"
-in
+case "$SHUTDOWN" in
 	false)
 		INIT_MAIN ;;
 	true)
