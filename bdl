@@ -3,7 +3,7 @@
 #----------------------------------------------------------------------------------
 # Project Name      - bdl
 # Started On        - Sat 16 Sep 22:34:12 BST 2017
-# Last Change       - Sun 17 Sep 23:55:15 BST 2017
+# Last Change       - Tue  3 Oct 13:22:22 BST 2017
 # Author E-Mail     - terminalforlife@yahoo.com
 # Author GitHub     - https://github.com/terminalforlife
 #----------------------------------------------------------------------------------
@@ -15,10 +15,10 @@ DEPCOUNT=0
 for DEP in\
 \
 	/usr/bin/{wc,find,wget,head}\
-	/bin/{cat,sync,mkdir,uname,date}\
+	/bin/{sync,mkdir,uname,date}\
 	/sbin/shutdown
 {
-	if ! type -P "$DEP" &> /dev/null
+	if ! [ -x "$DEP" ]
 	then
 		ERR "Dependency '$DEP' not met."
 		let DEPCOUNT++
@@ -42,8 +42,11 @@ DEBUG="false"
 
 USAGE()
 {
-	/bin/cat <<-EOF
-		            BDL - Batch Downloader (17th September 2017)
+	while read -r
+	do
+		echo "$REPLY"
+	done <<-EOF
+		            BDL - Batch Downloader (3rd October 2017)
 		            Written by terminalforlife (terminalforlife@yahoo.com)
 		
 		            Easily and quickly download a batch of files using wget.
@@ -76,7 +79,7 @@ INIT_MAIN()
 			VFLAG="-v" ;;
 	esac
 
-	echo -e "[ `date +%F\ %X` ] Lines detected in bdl list: $(/usr/bin/wc -l < "$BDL_FILE")\n"
+	echo -e "[ `/bin/date +%F\ %X` ] Lines detected in bdl list: $(/usr/bin/wc -l < "$BDL_FILE")\n"
 
 	for LINK in `< "$BDL_FILE"`
 	{
@@ -104,11 +107,11 @@ INIT_MAIN()
 		/usr/bin/notify-send "System shutdown in one minute." -i warning -u critical
 	elif [ "$SUSPEND" == "true" ]
 	then
-		if type -P /bin/systemctl &> /dev/null
+		if [ -x /bin/systemctl ]
 		then
 			/usr/bin/notify-send "System will suspend." -i warning -u critical
 			/bin/systemctl suspend
-		elif type -P /usr/sbin/pm-suspend &> /dev/null
+		elif [ -x /usr/sbin/pm-suspend ]
 		then
 			/usr/bin/notify-send "System will suspend." -i warning -u critical
 			/usr/sbin/pm-suspend
@@ -147,10 +150,9 @@ for ARG
 		--tohere=*)
 			DL_DIR="${ARG/*=}"
 
-			if ! [ -d "$TOHERE" ]
-			then
+			[ -d "$TOHERE" ] || {
 				XERR "Destination directory unavailable."
-			fi ;;
+			} ;;
 		--editor=*)
 			echo "${ARG/*=}" > "$LIST_EDITOR_FILE"; exit 0 ;;
 		--edit|-e)
