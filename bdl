@@ -3,18 +3,18 @@
 #----------------------------------------------------------------------------------
 # Project Name      - bdl
 # Started On        - Sat 16 Sep 22:34:12 BST 2017
-# Last Change       - Wed  4 Oct 21:30:40 BST 2017
+# Last Change       - Thu  5 Oct 18:10:11 BST 2017
 # Author E-Mail     - terminalforlife@yahoo.com
 # Author GitHub     - https://github.com/terminalforlife
 #----------------------------------------------------------------------------------
 
-XERR(){ echo "[L${LINENO}] ERROR: $1" 1>&2; exit 1; }
-ERR(){ echo "[L${LINENO}] ERROR: $1" 1>&2; }
+XERR(){ echo "[L${1}] ERROR: $2" 1>&2; exit 1; }
+ERR(){ echo "[L${1}] ERROR: $2" 1>&2; }
 
 DEPCOUNT=0
 for DEP in /usr/bin/{wc,find,wget,head} /bin/{sync,mkdir,uname} /sbin/shutdown; {
 	[ -x "$DEP" ] || {
-		ERR "Dependency '$DEP' not met."
+		ERR "$LINENO" "Dependency '$DEP' not met."
 		let DEPCOUNT++
 	}
 }
@@ -38,7 +38,7 @@ USAGE(){
 	while read -r; do
 		echo "$REPLY"
 	done <<-EOF
-		            BDL - Batch Downloader (4th October 2017)
+		            BDL - Batch Downloader (5th October 2017)
 		            Written by terminalforlife (terminalforlife@yahoo.com)
 		
 		            Easily and quickly download a batch of files using wget.
@@ -62,7 +62,7 @@ USAGE(){
 if ! [ -f "$LIST_EDITOR_FILE" ]\
 && ! [ -w "$LIST_EDITOR_FILE" ]\
 && ! [ -s "$LIST_EDITOR_FILE" ]; then
-	XERR "Please choose an editor. See --help for info."
+	XERR "$LINENO" "Please choose an editor. See --help for info."
 else
 	LIST_EDITOR=`< "$LIST_EDITOR_FILE"`
 fi
@@ -91,7 +91,7 @@ INIT_MAIN(){
 		if type -P /usr/bin/notify-send &> /dev/null; then
 			/usr/bin/notify-send "Downloading with bdl is completed."
 		else
-			ERR "Unable to find notify-send."
+			ERR "$LINENO" "Unable to find notify-send."
 		fi
 	}
 
@@ -108,7 +108,7 @@ INIT_MAIN(){
 			/usr/bin/notify-send "System will suspend." -i warning -u critical
 			/usr/sbin/pm-suspend
 		else
-			XERR "Failed to suspend the machine."
+			XERR "$LINENO" "Failed to suspend the machine."
 		fi
 	fi
 }
@@ -118,7 +118,7 @@ EDIT(){
 		$LIST_EDITOR "$BDL_FILE" 2> /dev/null
 		exit 0
 	else
-		XERR "Unable to execute: $LIST_EDITOR"
+		XERR "$LINENO" "Unable to execute: $LIST_EDITOR"
 	fi
 }
 
@@ -138,7 +138,7 @@ for ARG; {
 			DL_DIR="${ARG/*=}"
 
 			[ -d "$TOHERE" ] || {
-				XERR "Destination directory unavailable."
+				XERR "$LINENO" "Destination directory unavailable."
 			} ;;
 		--editor=*)
 			echo "${ARG/*=}" > "$LIST_EDITOR_FILE"; exit 0 ;;
@@ -157,12 +157,12 @@ for ARG; {
 		EMPTY)
 			;;
 		*)
-			XERR "Incorrect argument(s)." ;;
+			XERR "$LINENO" "Incorrect argument(s)." ;;
 	esac
 }
 
-[ `/bin/uname -s` == "Linux" ] || XERR "Unsupported platform."
-[ $UID -eq 0 ] && XERR "Root access is not required."
+[ `/bin/uname -s` == "Linux" ] || XERR "$LINENO" "Unsupported platform."
+[ $UID -eq 0 ] && XERR "$LINENO" "Root access is not required."
 
 case "$SHUTDOWN" in
 	false)
