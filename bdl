@@ -53,7 +53,7 @@ USAGE(){
 		            --notify|-N             - Use notify-send to inform of bdl completion.
 		                                      Notifies only after all files are finished.
 		            --edit|-e               - Change URL list with an available text editor.
-		            --empty|-C              - Empty the bdl download list entirely.
+		            --clear|-C              - Empty the bdl download list entirely.
 		
 		FILE:       All files are found in '\$HOME/.bdl'.
 	EOF
@@ -144,7 +144,7 @@ for ARG; {
 			echo "${ARG/*=}" > "$LIST_EDITOR_FILE"; exit 0 ;;
 		--edit|-e)
 			EDIT ;;
-		--empty|-E)
+		--clear|-E)
 			EMPTY; exit 0 ;;
 		--verbose|-v)
 			VERBOSE="true" ;;
