@@ -1,6 +1,11 @@
 # bdl
 Easily and quickly download a batch of files using wget.
 
+**MASTER** - _Hopefully stable branch._\
+**DEV** - _Development Branch (latest changes)_
+
+I will eventually incorporate this method to all of my repositories, but that will _definitely_ take time.
+
 INTRODUCTION
 ------------
 
