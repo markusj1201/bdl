@@ -3,19 +3,19 @@
 #----------------------------------------------------------------------------------
 # Project Name      - bdl
 # Started On        - Sat 16 Sep 22:34:12 BST 2017
-# Last Change       - Thu  5 Oct 18:10:11 BST 2017
+# Last Change       - Mon 23 Oct 00:59:19 BST 2017
 # Author E-Mail     - terminalforlife@yahoo.com
 # Author GitHub     - https://github.com/terminalforlife
 #----------------------------------------------------------------------------------
 
-XERR(){ echo "[L${1}] ERROR: $2" 1>&2; exit 1; }
-ERR(){ echo "[L${1}] ERROR: $2" 1>&2; }
+XERR(){ printf "[L%0.4d] ERROR: %s\n" "$1" "$2" 1>&2; exit 1; }
+ERR(){ printf "[L%0.4d] ERROR: %s\n" "$1" "$2" 1>&2; }
 
-DEPCOUNT=0
-for DEP in /usr/bin/{wc,find,wget,head} /bin/{sync,mkdir,uname} /sbin/shutdown; {
+declare -i DEPCOUNT=0
+for DEP in /usr/bin/wget /bin/{sync,mkdir,uname} /sbin/shutdown; {
 	[ -x "$DEP" ] || {
 		ERR "$LINENO" "Dependency '$DEP' not met."
-		let DEPCOUNT++
+		DEPCOUNT+=1
 	}
 }
 
@@ -31,6 +31,8 @@ VERBOSE="false"
 NOTIFY="false"
 DEBUG="false"
 
+[ $UID -eq 0 ] && XERR "$LINENO" "Root access is not required."
+
 /bin/mkdir -p "$MAIN_DIR"
 [ -f "$BDL_FILE" ] || > "$BDL_FILE"
 
@@ -38,7 +40,7 @@ USAGE(){
 	while read -r; do
 		echo "$REPLY"
 	done <<-EOF
-		            BDL - Batch Downloader (5th October 2017)
+		            BDL - Batch Downloader (23rd October 2017)
 		            Written by terminalforlife (terminalforlife@yahoo.com)
 		
 		            Easily and quickly download a batch of files using wget.
@@ -77,8 +79,17 @@ INIT_MAIN(){
 			VFLAG="-v" ;;
 	esac
 
+	LIST_COUNT=$(
+		declare -i LINE=0
+		while read -r; do
+			LINE+=1
+		done < "$BDL_FILE"
+		echo "$LINE"
+	)
+
+	#TODO - An echo and printf? Smelly! Fix.
 	echo -e "[ `printf '%(%F %X)T\n'` ] Lines detected in bdl"\
-		"list: $(/usr/bin/wc -l < "$BDL_FILE")\n"
+		"list: $LIST_COUNT\n"
 
 	for LINK in `< "$BDL_FILE"`; {
 		/usr/bin/wget --random-wait --continue --tries=1 $VFLAG --max-redirect=1\
@@ -88,11 +99,9 @@ INIT_MAIN(){
 	}
 
 	[ "$NOTIFY" == "true" ] && {
-		if type -P /usr/bin/notify-send &> /dev/null; then
+		[ -x /usr/bin/notify-send ] && {
 			/usr/bin/notify-send "Downloading with bdl is completed."
-		else
-			ERR "$LINENO" "Unable to find notify-send."
-		fi
+		} || ERR "$LINENO" "Unable to find notify-send."
 	}
 
 	[ "$DEBUG" == "true" ] && set +xue
@@ -128,19 +137,21 @@ EMPTY(){
 	echo "      File '$BDL_FILE' now completely empty."
 }
 
-for ARG; {
+while [ "$1" ]; do
 	case ${ARG:-EMPTY} in
 		--help|-h|-\?)
 			USAGE; exit 0 ;;
 		--debug|-d)
 			DEBUG="true" ;;
-		--tohere=*)
-			DL_DIR="${ARG/*=}"
+		--tohere)
+			shift
 
-			[ -d "$TOHERE" ] || {
+			[ -d "$1" ] || {
 				XERR "$LINENO" "Destination directory unavailable."
-			} ;;
-		--editor=*)
+			} && DL_DIR="$1" ;;
+		--editor)
+			shift
+
 			echo "${ARG/*=}" > "$LIST_EDITOR_FILE"; exit 0 ;;
 		--edit|-e)
 			EDIT ;;
@@ -157,12 +168,14 @@ for ARG; {
 		EMPTY)
 			;;
 		*)
-			XERR "$LINENO" "Incorrect argument(s)." ;;
+			break ;;
 	esac
-}
 
+	shift
+done
+
+[ -n "$*" ] && XERR "$LINENO" "Incorrect argument(s)."
 [ `/bin/uname -s` == "Linux" ] || XERR "$LINENO" "Unsupported platform."
-[ $UID -eq 0 ] && XERR "$LINENO" "Root access is not required."
 
 case "$SHUTDOWN" in
 	false)
