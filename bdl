@@ -3,7 +3,7 @@
 #----------------------------------------------------------------------------------
 # Project Name      - bdl (Batch Downloader)
 # Started On        - Sat 16 Sep 22:34:12 BST 2017
-# Last Change       - Mon 23 Oct 01:05:46 BST 2017
+# Last Change       - Mon 23 Oct 01:11:16 BST 2017
 # Author E-Mail     - terminalforlife@yahoo.com
 # Author GitHub     - https://github.com/terminalforlife
 #----------------------------------------------------------------------------------
@@ -53,7 +53,6 @@ USAGE(){
 		            --suspend|-s            - Immediately suspend machine when finished.
 		            --shutdown|-S           - Like above, but a shutdown after 1 minute.
 		            --notify|-N             - Use notify-send to inform of bdl completion.
-		                                      Notifies only after all files are finished.
 		            --edit|-e               - Change URL list with an available text editor.
 		            --clear|-C              - Empty the bdl download list entirely.
 		
@@ -82,10 +81,6 @@ INIT_MAIN(){
 		done < "$BDL_FILE"
 		echo "$LINE"
 	)
-
-	#TODO - An echo and printf? Smelly! Fix.
-	echo -e "[ `printf '%(%F %X)T\n'` ] Lines detected in bdl"\
-		"list: $LIST_COUNT\n"
 
 	for LINK in `< "$BDL_FILE"`; {
 		/usr/bin/wget --random-wait --continue --tries=1 $VFLAG --max-redirect=1\
@@ -118,21 +113,6 @@ INIT_MAIN(){
 	fi
 }
 
-EDIT(){
-	if [ -x "$LIST_EDITOR" ]; then
-		$LIST_EDITOR "$BDL_FILE" 2> /dev/null
-		exit 0
-	else
-		XERR "$LINENO" "Unable to execute: $LIST_EDITOR"
-	fi
-}
-
-EMPTY(){
-	/bin/cp "$BDL_FILE" "${BDL_FILE}.old" &> /dev/null
-	echo "NOTE: File '$BDL_FILE' was backed up." > "$BDL_FILE"
-	echo "      File '$BDL_FILE' now completely empty."
-}
-
 while [ "$1" ]; do
 	case "$1" in
 		--help|-h|-\?)
@@ -151,9 +131,16 @@ while [ "$1" ]; do
 			echo "$1" > "$LIST_EDITOR_FILE"
 			exit 0 ;;
 		--edit|-e)
-			EDIT ;;
+			if [ -x "$LIST_EDITOR" ]; then
+				$LIST_EDITOR "$BDL_FILE" 2> /dev/null
+				exit 0
+			else
+				XERR "$LINENO" "Unable to execute: $LIST_EDITOR"
+			fi ;;
 		--clear|-E)
-			EMPTY; exit 0 ;;
+			/bin/cp "$BDL_FILE"{,.old} &> /dev/null
+			echo "File '$BDL_FILE' now empty."
+			exit 0 ;;
 		--verbose|-v)
 			VERBOSE="true" ;;
 		--notify|-N)
