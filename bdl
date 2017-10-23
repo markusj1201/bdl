@@ -1,9 +1,9 @@
 #!/bin/bash
 
 #----------------------------------------------------------------------------------
-# Project Name      - bdl
+# Project Name      - bdl (Batch Downloader)
 # Started On        - Sat 16 Sep 22:34:12 BST 2017
-# Last Change       - Mon 23 Oct 00:59:19 BST 2017
+# Last Change       - Mon 23 Oct 01:05:46 BST 2017
 # Author E-Mail     - terminalforlife@yahoo.com
 # Author GitHub     - https://github.com/terminalforlife
 #----------------------------------------------------------------------------------
@@ -47,8 +47,8 @@ USAGE(){
 		
 		OPTS:       --help|-h|-?            - Displays this help information.
 		            --debug|-d              - Enables the built-in bash debugging.
-		            --tohere=T              - Where T is the location to download.
-		            --editor=E              - Where E is the command for your editor.
+		            --tohere T              - Where T is the location to download.
+		            --editor E              - Where E is the command for your editor.
 		            --verbose|-v            - Display wget's more verbose output.
 		            --suspend|-s            - Immediately suspend machine when finished.
 		            --shutdown|-S           - Like above, but a shutdown after 1 minute.
@@ -61,13 +61,9 @@ USAGE(){
 	EOF
 }
 
-if ! [ -f "$LIST_EDITOR_FILE" ]\
-&& ! [ -w "$LIST_EDITOR_FILE" ]\
-&& ! [ -s "$LIST_EDITOR_FILE" ]; then
+[ -f "$LIST_EDITOR_FILE" -a -w "$LIST_EDITOR_FILE" -a -s "$LIST_EDITOR_FILE" ] || {
 	XERR "$LINENO" "Please choose an editor. See --help for info."
-else
-	LIST_EDITOR=`< "$LIST_EDITOR_FILE"`
-fi
+} && LIST_EDITOR=`< "$LIST_EDITOR_FILE"`
 
 INIT_MAIN(){
 	[ "$DEBUG" == "true" ] && set -xue
@@ -138,7 +134,7 @@ EMPTY(){
 }
 
 while [ "$1" ]; do
-	case ${ARG:-EMPTY} in
+	case "$1" in
 		--help|-h|-\?)
 			USAGE; exit 0 ;;
 		--debug|-d)
@@ -152,7 +148,8 @@ while [ "$1" ]; do
 		--editor)
 			shift
 
-			echo "${ARG/*=}" > "$LIST_EDITOR_FILE"; exit 0 ;;
+			echo "$1" > "$LIST_EDITOR_FILE"
+			exit 0 ;;
 		--edit|-e)
 			EDIT ;;
 		--clear|-E)
@@ -165,8 +162,6 @@ while [ "$1" ]; do
 			SUSPEND="true" ;;
 		--shutdown|-S)
 			SHUTDOWN="true" ;;
-		EMPTY)
-			;;
 		*)
 			break ;;
 	esac
