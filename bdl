@@ -137,7 +137,7 @@ while [ "$1" ]; do
 			else
 				XERR "$LINENO" "Unable to execute: $LIST_EDITOR"
 			fi ;;
-		--clear|-E)
+		--clear|-C)
 			/bin/cp "$BDL_FILE"{,.old} &> /dev/null
 			echo "File '$BDL_FILE' now empty."
 			exit 0 ;;
