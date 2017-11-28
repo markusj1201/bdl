@@ -3,7 +3,7 @@
 #----------------------------------------------------------------------------------
 # Project Name      - bdl (Batch Downloader)
 # Started On        - Sat 16 Sep 22:34:12 BST 2017
-# Last Change       - Mon 23 Oct 01:11:16 BST 2017
+# Last Change       - Tue 28 Nov 12:48:38 GMT 2017
 # Author E-Mail     - terminalforlife@yahoo.com
 # Author GitHub     - https://github.com/terminalforlife
 #----------------------------------------------------------------------------------
@@ -12,7 +12,7 @@ XERR(){ printf "[L%0.4d] ERROR: %s\n" "$1" "$2" 1>&2; exit 1; }
 ERR(){ printf "[L%0.4d] ERROR: %s\n" "$1" "$2" 1>&2; }
 
 declare -i DEPCOUNT=0
-for DEP in /usr/bin/wget /bin/{sync,mkdir,uname} /sbin/shutdown; {
+for DEP in /usr/bin/wget /sbin/shutdown /bin/{mv,systemctl,sleep,sync,mkdir}; {
 	[ -x "$DEP" ] || {
 		ERR "$LINENO" "Dependency '$DEP' not met."
 		DEPCOUNT+=1
@@ -40,7 +40,7 @@ USAGE(){
 	while read -r; do
 		echo "$REPLY"
 	done <<-EOF
-		            BDL - Batch Downloader (23rd October 2017)
+		            BDL - Batch Downloader (28th November 2017)
 		            Written by terminalforlife (terminalforlife@yahoo.com)
 		
 		            Easily and quickly download a batch of files using wget.
@@ -48,7 +48,7 @@ USAGE(){
 		OPTS:       --help|-h|-?            - Displays this help information.
 		            --debug|-d              - Enables the built-in bash debugging.
 		            --tohere T              - Where T is the location to download.
-		            --editor E              - Where E is the command for your editor.
+		            --editor CMD            - Where CMD is the command for your editor.
 		            --verbose|-v            - Display wget's more verbose output.
 		            --suspend|-s            - Immediately suspend machine when finished.
 		            --shutdown|-S           - Like above, but a shutdown after 1 minute.
@@ -66,13 +66,7 @@ USAGE(){
 
 INIT_MAIN(){
 	[ "$DEBUG" == "true" ] && set -xue
-
-	case "$VERBOSE" in
-		false)
-			VFLAG="--quiet" ;;
-		true)
-			VFLAG="-v" ;;
-	esac
+	[ "$VERBOSE" == "true" ] && VFLAG="-v" || VFLAG="--quiet"
 
 	LIST_COUNT=$(
 		declare -i LINE=0
@@ -95,21 +89,13 @@ INIT_MAIN(){
 		} || ERR "$LINENO" "Unable to find notify-send."
 	}
 
-	[ "$DEBUG" == "true" ] && set +xue
-
 	if [ "$SHUTDOWN" == "true" ]; then
 		/sbin/shutdown --no-wall +1
 		/usr/bin/notify-send "System shutdown in one minute." -i warning -u critical
 	elif [ "$SUSPEND" == "true" ]; then
-		if [ -x /bin/systemctl ]; then
-			/usr/bin/notify-send "System will suspend." -i warning -u critical
-			/bin/systemctl suspend
-		elif [ -x /usr/sbin/pm-suspend ]; then
-			/usr/bin/notify-send "System will suspend." -i warning -u critical
-			/usr/sbin/pm-suspend
-		else
-			XERR "$LINENO" "Failed to suspend the machine."
-		fi
+		/usr/bin/notify-send "System will suspend." -i warning -u critical
+		/bin/sleep 3s
+		/bin/systemctl suspend
 	fi
 }
 
@@ -138,7 +124,7 @@ while [ "$1" ]; do
 				XERR "$LINENO" "Unable to execute: $LIST_EDITOR"
 			fi ;;
 		--clear|-C)
-			/bin/cp "$BDL_FILE"{,.old} &> /dev/null
+			/bin/mv "$BDL_FILE"{,.old} &> /dev/null
 			echo "File '$BDL_FILE' now empty."
 			exit 0 ;;
 		--verbose|-v)
@@ -157,7 +143,7 @@ while [ "$1" ]; do
 done
 
 [ -n "$*" ] && XERR "$LINENO" "Incorrect argument(s)."
-[ `/bin/uname -s` == "Linux" ] || XERR "$LINENO" "Unsupported platform."
+[ "$OSTYPE" == "linux-gnu" ] || XERR "$LINENO" "Unsupported platform."
 
 case "$SHUTDOWN" in
 	false)
