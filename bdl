@@ -3,7 +3,7 @@
 #----------------------------------------------------------------------------------
 # Project Name      - bdl (Batch Downloader)
 # Started On        - Sat 16 Sep 22:34:12 BST 2017
-# Last Change       - Tue 28 Nov 13:00:09 GMT 2017
+# Last Change       - Tue 28 Nov 13:04:37 GMT 2017
 # Author E-Mail     - terminalforlife@yahoo.com
 # Author GitHub     - https://github.com/terminalforlife
 #----------------------------------------------------------------------------------
@@ -32,6 +32,7 @@ NOTIFY="false"
 DEBUG="false"
 
 [ $UID -eq 0 ] && XERR "$LINENO" "Root access is not required."
+[ "$OSTYPE" == "linux-gnu" ] || XERR "$LINENO" "Unsupported platform."
 
 /bin/mkdir -p "$MAIN_DIR"
 [ -f "$BDL_FILE" ] || > "$BDL_FILE"
@@ -111,9 +112,8 @@ while [ "$1" ]; do
 		--insert|-I)
 			shift
 
-			[ -z "$1" ] && {
-				XERR "$LINENO" "Specify a direct download URL to insert."
-			} && printf "%s\n" "$1" >> "$BDL_FILE" ;;
+			printf "%s\n" "$1" >> "$BDL_FILE"
+			exit 0 ;;
 		--dest|-d)
 			shift
 
@@ -144,15 +144,10 @@ while [ "$1" ]; do
 			SUSPEND="true" ;;
 		--shutdown|-S)
 			SHUTDOWN="true" ;;
-		*)
-			break ;;
 	esac
 
 	shift
 done
-
-[ -n "$*" ] && XERR "$LINENO" "Incorrect argument(s)."
-[ "$OSTYPE" == "linux-gnu" ] || XERR "$LINENO" "Unsupported platform."
 
 case "$SHUTDOWN" in
 	false)
