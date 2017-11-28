@@ -3,7 +3,7 @@
 #----------------------------------------------------------------------------------
 # Project Name      - bdl (Batch Downloader)
 # Started On        - Sat 16 Sep 22:34:12 BST 2017
-# Last Change       - Tue 28 Nov 13:04:37 GMT 2017
+# Last Change       - Tue 28 Nov 13:06:53 GMT 2017
 # Author E-Mail     - terminalforlife@yahoo.com
 # Author GitHub     - https://github.com/terminalforlife
 #----------------------------------------------------------------------------------
@@ -112,8 +112,8 @@ while [ "$1" ]; do
 		--insert|-I)
 			shift
 
-			printf "%s\n" "$1" >> "$BDL_FILE"
-			exit 0 ;;
+			INSERT="true"
+			printf "%s\n" "$1" >> "$BDL_FILE" ;;
 		--dest|-d)
 			shift
 
@@ -148,6 +148,8 @@ while [ "$1" ]; do
 
 	shift
 done
+
+[ "$INSERT" == "true" ] && exit 0
 
 case "$SHUTDOWN" in
 	false)
