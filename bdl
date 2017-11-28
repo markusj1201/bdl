@@ -3,7 +3,7 @@
 #----------------------------------------------------------------------------------
 # Project Name      - bdl (Batch Downloader)
 # Started On        - Sat 16 Sep 22:34:12 BST 2017
-# Last Change       - Tue 28 Nov 12:48:38 GMT 2017
+# Last Change       - Tue 28 Nov 12:52:27 GMT 2017
 # Author E-Mail     - terminalforlife@yahoo.com
 # Author GitHub     - https://github.com/terminalforlife
 #----------------------------------------------------------------------------------
@@ -46,9 +46,9 @@ USAGE(){
 		            Easily and quickly download a batch of files using wget.
 		
 		OPTS:       --help|-h|-?            - Displays this help information.
-		            --debug|-d              - Enables the built-in bash debugging.
-		            --tohere T              - Where T is the location to download.
-		            --editor CMD            - Where CMD is the command for your editor.
+		            --debug|-D              - Enables the built-in bash debugging.
+		            --dest|-d PATH          - Where PATH is the location to download.
+		            --editor|-E CMD         - Where CMD is the command for your editor.
 		            --verbose|-v            - Display wget's more verbose output.
 		            --suspend|-s            - Immediately suspend machine when finished.
 		            --shutdown|-S           - Like above, but a shutdown after 1 minute.
@@ -103,15 +103,15 @@ while [ "$1" ]; do
 	case "$1" in
 		--help|-h|-\?)
 			USAGE; exit 0 ;;
-		--debug|-d)
+		--debug|-D)
 			DEBUG="true" ;;
-		--tohere)
+		--dest|-d)
 			shift
 
 			[ -d "$1" ] || {
 				XERR "$LINENO" "Destination directory unavailable."
 			} && DL_DIR="$1" ;;
-		--editor)
+		--editor|-E)
 			shift
 
 			echo "$1" > "$LIST_EDITOR_FILE"
