@@ -3,7 +3,7 @@
 #----------------------------------------------------------------------------------
 # Project Name      - bdl (Batch Downloader)
 # Started On        - Sat 16 Sep 22:34:12 BST 2017
-# Last Change       - Tue 28 Nov 15:17:38 GMT 2017
+# Last Change       - Tue 28 Nov 16:51:36 GMT 2017
 # Author E-Mail     - terminalforlife@yahoo.com
 # Author GitHub     - https://github.com/terminalforlife
 #----------------------------------------------------------------------------------
@@ -15,7 +15,11 @@ ERR(){ printf "[L%0.4d] ERROR: %s\n" "$1" "$2" 1>&2; }
 [ $UID -eq 0 ] && XERR "$LINENO" "Root access is not required."
 
 declare -i DEPCOUNT=0
-for DEP in /usr/bin/wget /sbin/shutdown /bin/{mv,systemctl,sleep,sync,mkdir}; {
+for DEP in\
+\
+	/usr/bin/{wget,cut} /sbin/shutdown\
+	/bin/{mv,systemctl,sleep,sync,mkdir}
+{
 	[ -x "$DEP" ] || {
 		ERR "$LINENO" "Dependency '$DEP' not met."
 		DEPCOUNT+=1
@@ -30,7 +34,7 @@ USAGE(){
 	done <<-EOF
 		            BDL - BATCH DOWNLOADER (28th November 2017)
 		            Written by terminalforlife (terminalforlife@yahoo.com)
-		
+
 		            Easily and quickly download a batch of files using wget.
 
 		SYNTAX:     bdl [OPTS]
@@ -45,12 +49,18 @@ USAGE(){
 		            --notify|-N             - Use notify-send to inform of bdl completion.
 		            --edit|-e               - Change URL list with an available text editor.
 		            --clear|-C              - Empty the bdl download list entirely.
-		
+
 		FILE:       All files are found in '\$HOME/.bdl'.
+
+		TIP:        You can specify the destination for your downloads on a per-download
+		            basis, all you need to do is append the destination path to the end of
+		            the line with the direct download URL.
+
+		            Those destination paths given (per the above tip) currently do not
+		            support variables, such as the environment variables \$HOME and \$USER.
 	EOF
 }
 
-DL_DIR="./"
 MAIN_DIR="$HOME/.bdl"
 LIST_EDITOR_FILE="$MAIN_DIR/editor.conf"
 BDL_FILE="$MAIN_DIR/bdl_list.txt"
@@ -112,10 +122,19 @@ done
 INIT_MAIN(){
 	while read -a X; do
 		if ! [[ "${X[0]}" =~ ^#+ ]]; then
-			/usr/bin/wget -qc --show-progress\
-				"${X[1]}" -O "$DL_DIR/${X[1]//*\/}"
+			WARGS="-qc --show-progress"
 
-			#/bin/sync "${DL_DIR%\/}/${X[1]/*\//}"
+			if [ -z "${X[1]}" ]; then
+				/usr/bin/wget $WARGS "${X[0]}" -O "./${X[0]//*\/}"
+				/bin/sync "./${X[0]//*\/}"
+			else
+				#TODO - Make this a pure-shell approach.
+				TARGET=`echo "${X[*]}" | /usr/bin/cut -d " " -f 2-`
+				[ -f "$TARGET" ] || XERR "$LINENO" "Target is not a file."
+
+				/usr/bin/wget $WARGS "${X[0]}" -O "$TARGET"
+				/bin/sync "$TARGET"
+			fi
 		fi
 	done < "$BDL_FILE"
 
