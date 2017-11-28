@@ -3,13 +3,16 @@
 #----------------------------------------------------------------------------------
 # Project Name      - bdl (Batch Downloader)
 # Started On        - Sat 16 Sep 22:34:12 BST 2017
-# Last Change       - Tue 28 Nov 13:06:53 GMT 2017
+# Last Change       - Tue 28 Nov 15:17:38 GMT 2017
 # Author E-Mail     - terminalforlife@yahoo.com
 # Author GitHub     - https://github.com/terminalforlife
 #----------------------------------------------------------------------------------
 
 XERR(){ printf "[L%0.4d] ERROR: %s\n" "$1" "$2" 1>&2; exit 1; }
 ERR(){ printf "[L%0.4d] ERROR: %s\n" "$1" "$2" 1>&2; }
+
+[ "$OSTYPE" == "linux-gnu" ] || XERR "$LINENO" "Unsupported platform."
+[ $UID -eq 0 ] && XERR "$LINENO" "Root access is not required."
 
 declare -i DEPCOUNT=0
 for DEP in /usr/bin/wget /sbin/shutdown /bin/{mv,systemctl,sleep,sync,mkdir}; {
@@ -21,25 +24,9 @@ for DEP in /usr/bin/wget /sbin/shutdown /bin/{mv,systemctl,sleep,sync,mkdir}; {
 
 [ $DEPCOUNT -gt 0 ] && exit 1
 
-DL_DIR="./"
-MAIN_DIR="$HOME/.bdl"
-LIST_EDITOR_FILE="$MAIN_DIR/editor.conf"
-BDL_FILE="$MAIN_DIR/bdl_list.txt"
-
-SHUTDOWN="false"
-VERBOSE="false"
-NOTIFY="false"
-DEBUG="false"
-
-[ $UID -eq 0 ] && XERR "$LINENO" "Root access is not required."
-[ "$OSTYPE" == "linux-gnu" ] || XERR "$LINENO" "Unsupported platform."
-
-/bin/mkdir -p "$MAIN_DIR"
-[ -f "$BDL_FILE" ] || > "$BDL_FILE"
-
 USAGE(){
 	while read -r; do
-		echo "$REPLY"
+		printf "%s\n" "$REPLY"
 	done <<-EOF
 		            BDL - BATCH DOWNLOADER (28th November 2017)
 		            Written by terminalforlife (terminalforlife@yahoo.com)
@@ -53,7 +40,6 @@ USAGE(){
 		            --insert|-I LINK        - Quickly append a link to the download list.
 		            --dest|-d PATH          - Where PATH is the location to download.
 		            --editor|-E CMD         - Where CMD is the command for your editor.
-		            --verbose|-v            - Display wget's more verbose output.
 		            --suspend|-s            - Immediately suspend machine when finished.
 		            --shutdown|-S           - Like above, but a shutdown after 1 minute.
 		            --notify|-N             - Use notify-send to inform of bdl completion.
@@ -64,44 +50,16 @@ USAGE(){
 	EOF
 }
 
-[ -f "$LIST_EDITOR_FILE" -a -w "$LIST_EDITOR_FILE" -a -s "$LIST_EDITOR_FILE" ] || {
+DL_DIR="./"
+MAIN_DIR="$HOME/.bdl"
+LIST_EDITOR_FILE="$MAIN_DIR/editor.conf"
+BDL_FILE="$MAIN_DIR/bdl_list.txt"
+
+if ! [ -f "$LIST_EDITOR_FILE" -a -s "$LIST_EDITOR_FILE" ]; then
 	XERR "$LINENO" "Please choose an editor. See --help for info."
-} && LIST_EDITOR=`< "$LIST_EDITOR_FILE"`
-
-INIT_MAIN(){
-	[ "$DEBUG" == "true" ] && set -xue
-	[ "$VERBOSE" == "true" ] && VFLAG="-v" || VFLAG="--quiet"
-
-	LIST_COUNT=$(
-		declare -i LINE=0
-		while read -r; do
-			LINE+=1
-		done < "$BDL_FILE"
-		echo "$LINE"
-	)
-
-	for LINK in `< "$BDL_FILE"`; {
-		/usr/bin/wget --random-wait --continue --tries=1 $VFLAG --max-redirect=1\
-			--show-progress "$LINK" -O "${DL_DIR}/${LINK/*\//}"
-
-		/bin/sync "${DL_DIR}/${LINK/*\//}"
-	}
-
-	[ "$NOTIFY" == "true" ] && {
-		[ -x /usr/bin/notify-send ] && {
-			/usr/bin/notify-send "Downloading with bdl is completed."
-		} || ERR "$LINENO" "Unable to find notify-send."
-	}
-
-	if [ "$SHUTDOWN" == "true" ]; then
-		/sbin/shutdown --no-wall +1
-		/usr/bin/notify-send "System shutdown in one minute." -i warning -u critical
-	elif [ "$SUSPEND" == "true" ]; then
-		/usr/bin/notify-send "System will suspend." -i warning -u critical
-		/bin/sleep 3s
-		/bin/systemctl suspend
-	fi
-}
+else
+	read LIST_EDITOR < "$LIST_EDITOR_FILE"
+fi
 
 while [ "$1" ]; do
 	case "$1" in
@@ -123,7 +81,7 @@ while [ "$1" ]; do
 		--editor|-E)
 			shift
 
-			echo "$1" > "$LIST_EDITOR_FILE"
+			printf "%s\n" "$1" > "$LIST_EDITOR_FILE"
 			exit 0 ;;
 		--edit|-e)
 			if [ -x "$LIST_EDITOR" ]; then
@@ -133,11 +91,8 @@ while [ "$1" ]; do
 				XERR "$LINENO" "Unable to execute: $LIST_EDITOR"
 			fi ;;
 		--clear|-C)
-			/bin/mv "$BDL_FILE"{,.old} &> /dev/null
-			echo "File '$BDL_FILE' now empty."
+			/bin/mv "$BDL_FILE"{,.old}
 			exit 0 ;;
-		--verbose|-v)
-			VERBOSE="true" ;;
 		--notify|-N)
 			NOTIFY="true" ;;
 		--suspend|-s)
@@ -149,11 +104,38 @@ while [ "$1" ]; do
 	shift
 done
 
-[ "$INSERT" == "true" ] && exit 0
+[ "$DEBUG" == "true" ] && set -xue
 
-case "$SHUTDOWN" in
-	false)
-		INIT_MAIN ;;
-	true)
-		INIT_MAIN SHUTDOWN ;;
-esac
+/bin/mkdir -p "$MAIN_DIR"
+[ -f "$BDL_FILE" ] || > "$BDL_FILE"
+
+INIT_MAIN(){
+	while read -a X; do
+		if ! [[ "${X[0]}" =~ ^#+ ]]; then
+			/usr/bin/wget -qc --show-progress\
+				"${X[1]}" -O "$DL_DIR/${X[1]//*\/}"
+
+			#/bin/sync "${DL_DIR%\/}/${X[1]/*\//}"
+		fi
+	done < "$BDL_FILE"
+
+	if [ "$NOTIFY" == "true" ]; then
+		/usr/bin/notify-send "Downloading with bdl is completed."
+	fi
+
+	if [ "$SHUTDOWN" == "true" ]; then
+		/usr/bin/notify-send "System shutdown in one minute."\
+			-i warning -u critical
+
+		/sbin/shutdown --no-wall +1
+	elif [ "$SUSPEND" == "true" ]; then
+		/usr/bin/notify-send "System will suspend in ten seconds."\
+			-i warning -u critical
+
+		/bin/sleep 10s
+		/bin/systemctl suspend
+	fi
+}
+
+[ "$INSERT" == "true" ] && exit 0
+[ "$SHUTDOWN" == "true" ] && INIT_MAIN SHUTDOWN || INIT_MAIN
