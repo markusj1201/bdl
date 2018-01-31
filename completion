@@ -3,14 +3,14 @@
 #----------------------------------------------------------------------------------
 # Project Name      - bdl/completion
 # Started On        - Mon 29 Jan 18:47:58 GMT 2018
-# Last Change       - Tue 30 Jan 21:24:27 GMT 2018
+# Last Change       - Wed 31 Jan 12:58:52 GMT 2018
 # Author E-Mail     - terminalforlife@yahoo.com
 # Author GitHub     - https://github.com/terminalforlife
 #----------------------------------------------------------------------------------
 # This is the bash completion script for bdl.
 #----------------------------------------------------------------------------------
 
-_arg_list(){
+_arg_list_bdl(){
 	local X
 
 	while read -a X; do
@@ -31,8 +31,8 @@ _arg_list(){
 	done <<< "$(/usr/bin/bdl -h)"
 }
 
-_option(){
-	COMPREPLY=($(compgen -W "$(_arg_list)" -- "$2"))
+_option_bdl(){
+	COMPREPLY=($(compgen -W "$(_arg_list_bdl)" -- "$2"))
 }
 
-complete -F _option -o default bdl
+complete -F _option_bdl -o default bdl
