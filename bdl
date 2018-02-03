@@ -3,7 +3,7 @@
 #----------------------------------------------------------------------------------
 # Project Name      - bdl (Batch Downloader)
 # Started On        - Sat 16 Sep 22:34:12 BST 2017
-# Last Change       - Tue 28 Nov 16:51:36 GMT 2017
+# Last Change       - Sat  3 Feb 19:38:22 GMT 2018
 # Author E-Mail     - terminalforlife@yahoo.com
 # Author GitHub     - https://github.com/terminalforlife
 #----------------------------------------------------------------------------------
@@ -28,11 +28,17 @@ for DEP in\
 
 [ $DEPCOUNT -gt 0 ] && exit 1
 
+# Newer versions of wget by default request unwanted server-side compression.
+read -a WGET_VERSION_LINE <<< "$(/usr/bin/wget --version)"
+if [ 0${WGET_VERSION_LINE[2]//[!0-9]} -ge 01192 ]; then
+	XERR "$LINENO" "Your version of wget is currently unsupported."
+fi
+
 USAGE(){
 	while read -r; do
 		printf "%s\n" "$REPLY"
 	done <<-EOF
-		            BDL - BATCH DOWNLOADER (28th November 2017)
+		            BDL - BATCH DOWNLOADER (3rd February 2018)
 		            Written by terminalforlife (terminalforlife@yahoo.com)
 
 		            Easily and quickly download a batch of files using wget.
