@@ -3,7 +3,7 @@
 #----------------------------------------------------------------------------------
 # Project Name      - bdl (Batch Downloader)
 # Started On        - Sat 16 Sep 22:34:12 BST 2017
-# Last Change       - Sat  3 Feb 19:38:22 GMT 2018
+# Last Change       - Fri 23 Feb 19:30:48 GMT 2018
 # Author E-Mail     - terminalforlife@yahoo.com
 # Author GitHub     - https://github.com/terminalforlife
 #----------------------------------------------------------------------------------
@@ -15,11 +15,7 @@ ERR(){ printf "[L%0.4d] ERROR: %s\n" "$1" "$2" 1>&2; }
 [ $UID -eq 0 ] && XERR "$LINENO" "Root access is not required."
 
 declare -i DEPCOUNT=0
-for DEP in\
-\
-	/usr/bin/{wget,cut} /sbin/shutdown\
-	/bin/{mv,systemctl,sleep,sync,mkdir}
-{
+for DEP in /usr/bin/wget /sbin/shutdown /bin/{mv,systemctl,sleep,sync,mkdir}; {
 	[ -x "$DEP" ] || {
 		ERR "$LINENO" "Dependency '$DEP' not met."
 		DEPCOUNT+=1
@@ -29,16 +25,14 @@ for DEP in\
 [ $DEPCOUNT -gt 0 ] && exit 1
 
 # Newer versions of wget by default request unwanted server-side compression.
-read -a WGET_VERSION_LINE <<< "$(/usr/bin/wget --version)"
-if [ 0${WGET_VERSION_LINE[2]//[!0-9]} -ge 01192 ]; then
-	XERR "$LINENO" "Your version of wget is currently unsupported."
-fi
+read -a WGET_VER_LINE <<< "$(/usr/bin/wget --version)"
+[ 0${WGET_VER_LINE[2]//[!0-9]} -ge 01192 ] && NOWARC="--no-warc-compression"
 
 USAGE(){
 	while read -r; do
 		printf "%s\n" "$REPLY"
 	done <<-EOF
-		            BDL - BATCH DOWNLOADER (3rd February 2018)
+		            BDL - BATCH DOWNLOADER (23rd February 2018)
 		            Written by terminalforlife (terminalforlife@yahoo.com)
 
 		            Easily and quickly download a batch of files using wget.
@@ -126,23 +120,36 @@ done
 [ -f "$BDL_FILE" ] || > "$BDL_FILE"
 
 INIT_MAIN(){
-	while read -a X; do
-		if ! [[ "${X[0]}" =~ ^#+ ]]; then
-			WARGS="-qc --show-progress"
+set -x
+	while read -a LINE; do
+		if ! [[ "${LINE[0]}" =~ ^#+ ]]; then
+			WARGS="-qc $NOWARC --show-progress"
 
-			if [ -z "${X[1]}" ]; then
-				/usr/bin/wget $WARGS "${X[0]}" -O "./${X[0]//*\/}"
-				/bin/sync "./${X[0]//*\/}"
+			if ! [ "${LINE[1]}" ]; then
+				/usr/bin/wget $WARGS "${LINE[0]}"\
+					-O "./${LINE[0]//*\/}"
+				/bin/sync "./${LINE[0]//*\/}"
 			else
-				#TODO - Make this a pure-shell approach.
-				TARGET=`echo "${X[*]}" | /usr/bin/cut -d " " -f 2-`
-				[ -f "$TARGET" ] || XERR "$LINENO" "Target is not a file."
+				FIELD_NUMBER=0
+				for I in ${LINE[@]}; {
+					let FIELD_NUMBER++
+					if [ $FIELD_NUMBER -ge 2 ]; then
+						TARGET+=(${LINE[FIELD_NUMBER]})
+					fi
+				}
 
-				/usr/bin/wget $WARGS "${X[0]}" -O "$TARGET"
-				/bin/sync "$TARGET"
+				#TODO - Fix TARGET evaluating to null value.
+				if ! [ -d "${TARGET%\/}" ]; then
+					XERR "$LINENO" "Invalid target directory."
+				else
+					/usr/bin/wget $WARGS "${LINE[0]}"\
+						-O "${TARGET%\/}/${LINE[0]//*\/}"
+					/bin/sync "$TARGET"
+				fi
 			fi
 		fi
 	done < "$BDL_FILE"
+set +x
 
 	if [ "$NOTIFY" == "true" ]; then
 		/usr/bin/notify-send "Downloading with bdl is completed."
