@@ -3,10 +3,12 @@
 #----------------------------------------------------------------------------------
 # Project Name      - bdl (Batch Downloader)
 # Started On        - Sat 16 Sep 22:34:12 BST 2017
-# Last Change       - Fri 23 Feb 19:30:48 GMT 2018
+# Last Change       - Sun  4 Mar 19:48:30 GMT 2018
 # Author E-Mail     - terminalforlife@yahoo.com
 # Author GitHub     - https://github.com/terminalforlife
 #----------------------------------------------------------------------------------
+
+_VERSION_="2018-03-04"
 
 XERR(){ printf "[L%0.4d] ERROR: %s\n" "$1" "$2" 1>&2; exit 1; }
 ERR(){ printf "[L%0.4d] ERROR: %s\n" "$1" "$2" 1>&2; }
@@ -32,14 +34,15 @@ USAGE(){
 	while read -r; do
 		printf "%s\n" "$REPLY"
 	done <<-EOF
-		            BDL - BATCH DOWNLOADER (23rd February 2018)
+		            BDL - BATCH DOWNLOADER ($_VERSION_)
 		            Written by terminalforlife (terminalforlife@yahoo.com)
 
 		            Easily and quickly download a batch of files using wget.
 
 		SYNTAX:     bdl [OPTS]
-		
+
 		OPTS:       --help|-h|-?            - Displays this help information.
+		            --version|-v            - Output only the version datestamp.
 		            --debug|-D              - Enables the built-in bash debugging.
 		            --insert|-I LINK        - Quickly append a link to the download list.
 		            --dest|-d PATH          - Where PATH is the location to download.
@@ -75,6 +78,9 @@ while [ "$1" ]; do
 	case "$1" in
 		--help|-h|-\?)
 			USAGE; exit 0 ;;
+		--version|-v)
+			printf "%s\n" "$_VERSION_"
+			exit 0 ;;
 		--debug|-D)
 			DEBUG="true" ;;
 		--insert|-I)
@@ -120,6 +126,7 @@ done
 [ -f "$BDL_FILE" ] || > "$BDL_FILE"
 
 INIT_MAIN(){
+#TODO - Continue this? Fairly sure I was debugging.
 set -x
 	while read -a LINE; do
 		if ! [[ "${LINE[0]}" =~ ^#+ ]]; then
