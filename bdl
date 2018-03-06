@@ -3,7 +3,7 @@
 #----------------------------------------------------------------------------------
 # Project Name      - bdl (Batch Downloader)
 # Started On        - Sat 16 Sep 22:34:12 BST 2017
-# Last Change       - Sun  4 Mar 19:48:30 GMT 2018
+# Last Change       - Sun  4 Mar 20:14:32 GMT 2018
 # Author E-Mail     - terminalforlife@yahoo.com
 # Author GitHub     - https://github.com/terminalforlife
 #----------------------------------------------------------------------------------
@@ -126,8 +126,6 @@ done
 [ -f "$BDL_FILE" ] || > "$BDL_FILE"
 
 INIT_MAIN(){
-#TODO - Continue this? Fairly sure I was debugging.
-set -x
 	while read -a LINE; do
 		if ! [[ "${LINE[0]}" =~ ^#+ ]]; then
 			WARGS="-qc $NOWARC --show-progress"
@@ -156,7 +154,6 @@ set -x
 			fi
 		fi
 	done < "$BDL_FILE"
-set +x
 
 	if [ "$NOTIFY" == "true" ]; then
 		/usr/bin/notify-send "Downloading with bdl is completed."
