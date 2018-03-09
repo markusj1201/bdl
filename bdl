@@ -3,32 +3,15 @@
 #----------------------------------------------------------------------------------
 # Project Name      - bdl (Batch Downloader)
 # Started On        - Sat 16 Sep 22:34:12 BST 2017
-# Last Change       - Sun  4 Mar 20:14:32 GMT 2018
+# Last Change       - Fri  9 Mar 15:38:12 GMT 2018
 # Author E-Mail     - terminalforlife@yahoo.com
 # Author GitHub     - https://github.com/terminalforlife
 #----------------------------------------------------------------------------------
 
-_VERSION_="2018-03-04"
+_VERSION_="2018-03-09"
 
 XERR(){ printf "[L%0.4d] ERROR: %s\n" "$1" "$2" 1>&2; exit 1; }
 ERR(){ printf "[L%0.4d] ERROR: %s\n" "$1" "$2" 1>&2; }
-
-[ "$OSTYPE" == "linux-gnu" ] || XERR "$LINENO" "Unsupported platform."
-[ $UID -eq 0 ] && XERR "$LINENO" "Root access is not required."
-
-declare -i DEPCOUNT=0
-for DEP in /usr/bin/wget /sbin/shutdown /bin/{mv,systemctl,sleep,sync,mkdir}; {
-	[ -x "$DEP" ] || {
-		ERR "$LINENO" "Dependency '$DEP' not met."
-		DEPCOUNT+=1
-	}
-}
-
-[ $DEPCOUNT -gt 0 ] && exit 1
-
-# Newer versions of wget by default request unwanted server-side compression.
-read -a WGET_VER_LINE <<< "$(/usr/bin/wget --version)"
-[ 0${WGET_VER_LINE[2]//[!0-9]} -ge 01192 ] && NOWARC="--no-warc-compression"
 
 USAGE(){
 	while read -r; do
@@ -82,7 +65,7 @@ while [ "$1" ]; do
 			printf "%s\n" "$_VERSION_"
 			exit 0 ;;
 		--debug|-D)
-			DEBUG="true" ;;
+			DEBUGME="true" ;;
 		--insert|-I)
 			shift
 
@@ -107,8 +90,7 @@ while [ "$1" ]; do
 				XERR "$LINENO" "Unable to execute: $LIST_EDITOR"
 			fi ;;
 		--clear|-C)
-			/bin/mv "$BDL_FILE"{,.old}
-			exit 0 ;;
+			CLEAR="true" ;;
 		--notify|-N)
 			NOTIFY="true" ;;
 		--suspend|-s)
@@ -120,7 +102,26 @@ while [ "$1" ]; do
 	shift
 done
 
-[ "$DEBUG" == "true" ] && set -xue
+declare -i DEPCOUNT=0
+for DEP in /usr/bin/wget /sbin/shutdown /bin/{mv,systemctl,sleep,sync,mkdir}; {
+	[ -x "$DEP" ] || {
+		ERR "$LINENO" "Dependency '$DEP' not met."
+		DEPCOUNT+=1
+	}
+}
+
+[ $DEPCOUNT -gt 0 ] && exit 1
+
+# Newer versions of wget by default request unwanted server-side compression.
+read -a WGET_VER_LINE <<< "$(/usr/bin/wget --version)"
+[ 0${WGET_VER_LINE[2]//[!0-9]} -ge 01192 ] && NOWARC="--no-warc-compression"
+
+[ "$DEBUGME" == "true" ] && set -x
+
+if [ "$CLEAR" == "true" ]; then
+	/bin/mv "$BDL_FILE"{,.old}
+	exit 0
+fi
 
 /bin/mkdir -p "$MAIN_DIR"
 [ -f "$BDL_FILE" ] || > "$BDL_FILE"
