@@ -3,7 +3,7 @@
 #----------------------------------------------------------------------------------
 # Project Name      - bdl (Batch Downloader)
 # Started On        - Sat 16 Sep 22:34:12 BST 2017
-# Last Change       - Fri  9 Mar 15:38:12 GMT 2018
+# Last Change       - Fri  9 Mar 15:40:18 GMT 2018
 # Author E-Mail     - terminalforlife@yahoo.com
 # Author GitHub     - https://github.com/terminalforlife
 #----------------------------------------------------------------------------------
@@ -97,8 +97,9 @@ while [ "$1" ]; do
 			SUSPEND="true" ;;
 		--shutdown|-S)
 			SHUTDOWN="true" ;;
+		-*)
+			XERR "$LINENO" "Incorrect argument(s) specified." ;;
 	esac
-
 	shift
 done
 
