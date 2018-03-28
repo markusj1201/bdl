@@ -3,12 +3,12 @@
 #----------------------------------------------------------------------------------
 # Project Name      - bdl (Batch Downloader)
 # Started On        - Sat 16 Sep 22:34:12 BST 2017
-# Last Change       - Fri  9 Mar 15:40:18 GMT 2018
+# Last Change       - Wed 28 Mar 18:21:58 BST 2018
 # Author E-Mail     - terminalforlife@yahoo.com
 # Author GitHub     - https://github.com/terminalforlife
 #----------------------------------------------------------------------------------
 
-_VERSION_="2018-03-09"
+_VERSION_="2018-03-28"
 
 XERR(){ printf "[L%0.4d] ERROR: %s\n" "$1" "$2" 1>&2; exit 1; }
 ERR(){ printf "[L%0.4d] ERROR: %s\n" "$1" "$2" 1>&2; }
@@ -105,17 +105,19 @@ done
 
 declare -i DEPCOUNT=0
 for DEP in /usr/bin/wget /sbin/shutdown /bin/{mv,systemctl,sleep,sync,mkdir}; {
-	[ -x "$DEP" ] || {
+	if ! [ -x "$DEP" ]; then
 		ERR "$LINENO" "Dependency '$DEP' not met."
 		DEPCOUNT+=1
-	}
+	fi
 }
 
 [ $DEPCOUNT -gt 0 ] && exit 1
 
-# Newer versions of wget by default request unwanted server-side compression.
 read -a WGET_VER_LINE <<< "$(/usr/bin/wget --version)"
-[ 0${WGET_VER_LINE[2]//[!0-9]} -ge 01192 ] && NOWARC="--no-warc-compression"
+WGET_VERSION=0${WGET_VER_LINE[2]//[!0-9]}
+if [ $WGET_VERSION -ge 01192 -a $WGET_VERSION -lt 01194 ]; then
+	NOWARC="--no-warc-compression"
+fi
 
 [ "$DEBUGME" == "true" ] && set -x
 
