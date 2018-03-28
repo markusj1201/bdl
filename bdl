@@ -3,7 +3,7 @@
 #----------------------------------------------------------------------------------
 # Project Name      - bdl (Batch Downloader)
 # Started On        - Sat 16 Sep 22:34:12 BST 2017
-# Last Change       - Wed 28 Mar 19:17:45 BST 2018
+# Last Change       - Wed 28 Mar 19:20:32 BST 2018
 # Author E-Mail     - terminalforlife@yahoo.com
 # Author GitHub     - https://github.com/terminalforlife
 #----------------------------------------------------------------------------------
@@ -78,12 +78,7 @@ while [ "$1" ]; do
 			printf "%s\n" "$1" > "$LIST_EDITOR_FILE"
 			exit 0 ;;
 		--edit|-e)
-			if [ -x "$LIST_EDITOR" ]; then
-				$LIST_EDITOR "$BDL_FILE" 2> /dev/null
-				exit 0
-			else
-				XERR "$LINENO" "Unable to execute: $LIST_EDITOR"
-			fi ;;
+			EDITFLAG="true" ;;
 		--clear|-C)
 			CLEAR="true" ;;
 		--notify|-N)
@@ -102,6 +97,15 @@ if ! [ -f "$LIST_EDITOR_FILE" -a -s "$LIST_EDITOR_FILE" ]; then
 	XERR "$LINENO" "Please choose an editor. See --help for info."
 else
 	read LIST_EDITOR < "$LIST_EDITOR_FILE"
+fi
+
+if [ "$EDITFLAG" == "true" ]; then
+	if [ -x "$LIST_EDITOR" ]; then
+		$LIST_EDITOR "$BDL_FILE" 2> /dev/null
+		exit 0
+	else
+		XERR "$LINENO" "Unable to execute: $LIST_EDITOR"
+	fi
 fi
 
 declare -i DEPCOUNT=0
