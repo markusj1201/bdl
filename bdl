@@ -3,7 +3,7 @@
 #----------------------------------------------------------------------------------
 # Project Name      - bdl (Batch Downloader)
 # Started On        - Sat 16 Sep 22:34:12 BST 2017
-# Last Change       - Wed 28 Mar 18:21:58 BST 2018
+# Last Change       - Wed 28 Mar 19:12:01 BST 2018
 # Author E-Mail     - terminalforlife@yahoo.com
 # Author GitHub     - https://github.com/terminalforlife
 #----------------------------------------------------------------------------------
@@ -40,7 +40,8 @@ USAGE(){
 
 		TIP:        You can specify the destination for your downloads on a per-download
 		            basis, all you need to do is append the destination path to the end of
-		            the line with the direct download URL.
+		            the line with the direct download URL. This feature is currently still
+		            in development, so it be buggy.
 
 		            Those destination paths given (per the above tip) currently do not
 		            support variables, such as the environment variables \$HOME and \$USER.
@@ -50,12 +51,6 @@ USAGE(){
 MAIN_DIR="$HOME/.bdl"
 LIST_EDITOR_FILE="$MAIN_DIR/editor.conf"
 BDL_FILE="$MAIN_DIR/bdl_list.txt"
-
-if ! [ -f "$LIST_EDITOR_FILE" -a -s "$LIST_EDITOR_FILE" ]; then
-	XERR "$LINENO" "Please choose an editor. See --help for info."
-else
-	read LIST_EDITOR < "$LIST_EDITOR_FILE"
-fi
 
 while [ "$1" ]; do
 	case "$1" in
@@ -102,6 +97,12 @@ while [ "$1" ]; do
 	esac
 	shift
 done
+
+if ! [ -f "$LIST_EDITOR_FILE" -a -s "$LIST_EDITOR_FILE" ]; then
+	XERR "$LINENO" "Please choose an editor. See --help for info."
+else
+	read LIST_EDITOR < "$LIST_EDITOR_FILE"
+fi
 
 declare -i DEPCOUNT=0
 for DEP in /usr/bin/wget /sbin/shutdown /bin/{mv,systemctl,sleep,sync,mkdir}; {
