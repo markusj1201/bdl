@@ -3,12 +3,12 @@
 #----------------------------------------------------------------------------------
 # Project Name      - bdl (Batch Downloader)
 # Started On        - Sat 16 Sep 22:34:12 BST 2017
-# Last Change       - Thu 29 Mar 00:41:58 BST 2018
+# Last Change       - Thu 12 Apr 14:04:48 BST 2018
 # Author E-Mail     - terminalforlife@yahoo.com
 # Author GitHub     - https://github.com/terminalforlife
 #----------------------------------------------------------------------------------
 
-_VERSION_="2018-03-29"
+_VERSION_="2018-04-12"
 
 XERR(){ printf "[L%0.4d] ERROR: %s\n" "$1" "$2" 1>&2; exit 1; }
 ERR(){ printf "[L%0.4d] ERROR: %s\n" "$1" "$2" 1>&2; }
@@ -133,7 +133,7 @@ fi
 
 #TODO - Why won't this directory be created on Ubuntu 18.04? There's no XERR, it
 #       just refuses to create the directory, so the following test breaks.
-if ! /bin/mkdir "$MAIN_DIR"; then
+if ! [ -d "$MAIN_DIR" ] && ! /bin/mkdir "$MAIN_DIR" &> /dev/null; then
 	XERR "$LINENO" "Unable to create $HOME/.bdl directory."
 fi
 
