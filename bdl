@@ -3,12 +3,18 @@
 #----------------------------------------------------------------------------------
 # Project Name      - bdl (Batch Downloader)
 # Started On        - Sat 16 Sep 22:34:12 BST 2017
-# Last Change       - Thu 12 Apr 14:04:48 BST 2018
+# Last Change       - Sun 24 Mar 00:39:21 GMT 2019
 # Author E-Mail     - terminalforlife@yahoo.com
 # Author GitHub     - https://github.com/terminalforlife
 #----------------------------------------------------------------------------------
 
-_VERSION_="2018-04-12"
+#TODO - Seeing: ./: Is a directory
+#       This is down to URLs ending in /, which ends up detecting the following
+#       parameter given in the lists file as the target location, which is the CWD.
+#       An exception for this needs to be put in place. This is probably why this
+#       target directory feature was buggy and probably unfinished as a result.
+
+_VERSION_="2019-03-24"
 
 XERR(){ printf "[L%0.4d] ERROR: %s\n" "$1" "$2" 1>&2; exit 1; }
 ERR(){ printf "[L%0.4d] ERROR: %s\n" "$1" "$2" 1>&2; }
